@@ -424,56 +424,6 @@ BOOL WriteShellcode(HANDLE hProcess, PVOID pPayload, SIZE_T nPayloadSz, PVOID* p
     return TRUE;
 }
 
-INT GetRobloxPid()
-{
-	PROCESSENTRY32 pe32;
-	pe32.dwSize = sizeof(PROCESSENTRY32);
-
-	HANDLE hSnapshot = CreateToolhelp32Snapshot(
-        TH32CS_SNAPPROCESS, 0
-    );
-
-	if (hSnapshot == INVALID_HANDLE_VALUE) 
-    {
-		MessageBoxA(NULL,
-			"Failed to create process snapshot",
-			"Error",
-			MB_ICONERROR
-		);
-
-        goto exit;
-	}
-
-	if (!Process32First(hSnapshot, &pe32)) 
-    {
-		MessageBoxA(NULL,
-			"Failed to get first process",
-			"Error",
-			MB_ICONERROR
-		);
-
-        goto cleanup;
-	}
-
-	do 
-    {
-		if (wcscmp(pe32.szExeFile, 
-            L"RobloxPlayerBeta.exe") == 0
-			//L"Notepad.exe") == 0
-        ) {
-			CloseHandle(hSnapshot);
-
-			return pe32.th32ProcessID;
-		}
-
-	} while (Process32Next(hSnapshot, &pe32));
-
-cleanup:
-	CloseHandle(hSnapshot);
-exit:
-    return 0;
-}
-
 INT main()
 {
     PVOID remotePayload = NULL;

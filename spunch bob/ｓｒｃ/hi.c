@@ -59,7 +59,6 @@ __forceinline void __stdcall popConsole(HMODULE hKernel32, DWORD64 pGetProcAddre
 	x.text1 = STR64('y', 'a', '?', '?', ' ', ':', 'p', 0);
 
 	pWriteConsoleA(hStdOut, (const void*)&x.text0, sizeof("How are ya?? :p") - 1, &dwWritten, NULL);
-
 }
 
 __declspec(noinline) void __stdcall shellcode()
@@ -120,13 +119,29 @@ __declspec(noinline) void __stdcall shellcode()
 
 	pMessageBoxA(NULL, (const char*)&x.text0, (const char*)&x.text1 + 2, MB_OK);
 
-	popConsole(kernel32Dll, (DWORD64)pGetProcAddress);
+	//popConsole(kernel32Dll, (DWORD64)pGetProcAddress);
+
+#define GetRaw(addr) (addr + (DWORD64)*(PVOID*)(__readgsqword(0x60) + 0x10) - 0x400000); // PEB->ImageBaseAddress
+
+	typedef int(__cdecl* RobloxPrint)(int, const char*, ...);
+	typedef RobloxPrint RobloxPrintFunc;
+
+	RobloxPrintFunc pRobloxPrint = (RobloxPrintFunc)GetRaw(0x016DB520);
+
+	x.text0 = STR64('H', 'e', 'l', 'l', 'o', ' ', 'R', 'O');
+	x.text1 = STR64('B', 'L', 'O', 'X', '!', '\n', 0, 0);
+
+	// call directly -- unsafe ! you will be banned !
+	pRobloxPrint(0, (const char*)&x.text0); // normal print
+	pRobloxPrint(1, (const char*)&x.text0); // information print
+	pRobloxPrint(2, (const char*)&x.text0); // warning print
+	pRobloxPrint(3, (const char*)&x.text0); // error print
 
 	x.text0 = STR64('c', 'l', 'i', 'c', 'k', ' ', 'm', 'e');
 	x.text1 = STR64(' ', 't', 'o', ' ', 'c', 'r', 'a', 's');
 	x.text2 = STR64('h', '!', 0, 0, 0, 0, 0, 0);
 
-    pMessageBoxA(NULL, (const char*)&x.text0, (const char*)&x.text1 + 4, MB_OK);	
+	pMessageBoxA(NULL, (const char*)&x.text0, (const char*)&x.text1 + 4, MB_OK);
 }
 
 #pragma warning (pop)
@@ -145,9 +160,9 @@ int main()
 
 	INT i = 0;
 
-    while (ptr[0] != 0xC3 || ptr[1] != 0xCC)
+	while (ptr[0] != 0xC3 || ptr[1] != 0x48)
 	{
-		if (i % 12 == 0)
+		if (i % 10 == 0)
 			printf("\n\t");
 		printf("0x%02X, ", *ptr);
 		ptr++;
@@ -157,6 +172,10 @@ int main()
 	printf("0x%02X };\n", ptr[0]);
 
 	printf("\n\nunsigned int ShellcodeSize = %d;\n", i);
+
+	getchar();
+
+	shellcode();
 
 	getchar();
 

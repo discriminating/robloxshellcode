@@ -363,7 +363,7 @@ cleanup:
 }
 
 
-VOID GetSharedPages(HANDLE hRoblox, DWORD64* dwPageList)
+VOID GetNonSharedPages(HANDLE hRoblox, DWORD64* dwPageList)
 {
     HMODULE modules[1024];
     DWORD cbNeeded;
@@ -459,7 +459,7 @@ VOID GetSharedPages(HANDLE hRoblox, DWORD64* dwPageList)
             if (nPageCount <= 20) {
                 dwPageList[nPageCount++] = address;
 
-                printf("Shared COW page at: 0x%p\n", address);
+                printf("Nonshared COW page at: 0x%p\n", address);
             }
 
             address += mbi.RegionSize;
@@ -479,7 +479,7 @@ BOOL WriteShellcode(HANDLE hProcess, PVOID pPayload, SIZE_T nPayloadSz, PVOID* p
     PVOID pRemote = NULL;
 
     DWORD64 dwPageList[20] = { 0 };
-    GetSharedPages(hProcess, &dwPageList);
+    GetNonSharedPages(hProcess, &dwPageList);
 
     for (INT i = 0; i < 20; i++) {
         if (dwPageList[i] == 0)
